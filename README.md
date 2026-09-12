@@ -176,6 +176,26 @@ Strip tracking parameters from a query string only.
 
 ---
 
+### `detrack.clean_url(url, patterns=None, settings=None)`
+
+Convenience shorthand — returns just the cleaned URL string.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | `str` | Any URL string |
+| `patterns` | `Iterable[str] \| None` | Optional param names to strip |
+| `settings` | `Settings \| None` | Optional per-call settings override |
+
+**Returns:** `str` -> cleaned URL.
+
+```python
+>>> from detrack import clean_url
+>>> clean_url("https://example.com?utm_source=twitter&q=python")
+'https://example.com?q=python'
+```
+
+---
+
 ### `detrack.clean_batch(urls, patterns=None, settings=None)`
 
 Strip tracking parameters from multiple URLs at once.
@@ -237,6 +257,16 @@ Pass a custom `patterns` list to `clean()` to override entirely.
 
 ---
 
+### `detrack.PREFIXES`
+
+```python
+tuple[str, ...]  # 19 prefixes: ("utm_", "mtm_", "pk_", "hsa_", ...)
+```
+
+The prefixes used for automatic param matching when `use_prefixes=True`. Useful for understanding what gets stripped or building custom logic.
+
+---
+
 ### `DetrackResult`
 
 ```python
@@ -247,6 +277,29 @@ class DetrackResult:
     cleaned_params: dict[str, str] # Parameters that remain
     removed_params: dict[str, str] # Stripped parameters + their original values
     has_tracking: bool             # True if any tracking params were removed
+```
+
+**String behavior:** `str(result)` and f-strings return the cleaned URL directly.
+
+```python
+>>> result = clean("https://example.com?utm_source=x&q=1")
+>>> f"{result}"
+'https://example.com?q=1'
+```
+
+**Repr:** Compact, without `SplitResult` internals.
+
+```python
+>>> repr(result)
+"DetrackResult(url='https://example.com?q=1', cleaned_params={'q': '1'}, removed_params={'utm_source': 'x'})"
+```
+
+**Unpacking:** Tuple unpacking yields `(url, cleaned_params, removed_params)`.
+
+```python
+>>> url, cleaned, removed = clean("https://example.com?utm_source=x&q=1")
+>>> url
+'https://example.com?q=1'
 ```
 
 `removed_params` preserves the original values so you can log what was stripped

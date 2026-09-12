@@ -1,10 +1,12 @@
 from detrack import (
+    PREFIXES,
     DetrackResult,
     Settings,
     __version__,
     clean,
     clean_batch,
     clean_query,
+    clean_url,
 )
 
 
@@ -280,3 +282,77 @@ def test_clean_batch_with_settings() -> None:
     results = clean_batch(urls, settings=settings)
     assert results[0].url == "https://example.com?q=1"
     assert results[1].url == "https://example.com?hsa_custom=y&b=2"
+
+
+def test_str_returns_url() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    assert str(result) == "https://example.com?q=1"
+    assert str(result) == result.url
+
+
+def test_str_in_fstring() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    assert f"{result}" == "https://example.com?q=1"
+
+
+def test_repr_no_splitresult() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    assert "SplitResult" not in repr(result)
+
+
+def test_repr_shows_url_and_params() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    r = repr(result)
+    assert "DetrackResult(url=" in r
+    assert "cleaned_params=" in r
+    assert "removed_params=" in r
+    assert "https://example.com?q=1" in r
+    assert "'utm_source'" in r
+
+
+def test_iter_unpack() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    url, cleaned, removed = result
+    assert url == "https://example.com?q=1"
+    assert cleaned == {"q": "1"}
+    assert removed == {"utm_source": "x"}
+
+
+def test_iter_in_list() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    assert list(result) == ["https://example.com?q=1", {"q": "1"}, {"utm_source": "x"}]
+
+
+def test_clean_url_returns_string() -> None:
+    result = clean_url("https://example.com?utm_source=x&q=1")
+    assert isinstance(result, str)
+    assert result == "https://example.com?q=1"
+
+
+def test_clean_url_strips_tracking() -> None:
+    assert clean_url("https://example.com?utm_source=twitter&fbclid=123&q=1") == "https://example.com?q=1"
+
+
+def test_clean_url_no_tracking() -> None:
+    assert clean_url("https://example.com?page=1&q=python") == "https://example.com?page=1&q=python"
+
+
+def test_clean_url_empty() -> None:
+    assert clean_url("") == ""
+
+
+def test_clean_url_with_patterns() -> None:
+    assert clean_url("https://example.com?x=1&q=2", patterns=["x"]) == "https://example.com?q=2"
+
+
+def test_clean_url_with_settings() -> None:
+    settings = Settings(use_prefixes=False)
+    url = "https://example.com?utm_custom=x&q=1"
+    assert clean_url(url, settings=settings) == url
+
+
+def test_prefixes_exported() -> None:
+    assert "PREFIXES" in __import__("detrack").__all__
+    assert isinstance(PREFIXES, tuple)
+    assert "utm_" in PREFIXES
+    assert len(PREFIXES) == 19

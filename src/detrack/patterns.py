@@ -25,6 +25,8 @@ _PREFIXES: tuple[str, ...] = (
     "nb_",
 )
 
+PREFIXES: tuple[str, ...] = _PREFIXES
+
 DEFAULT_PATTERNS: frozenset[str] = frozenset({
     # ── UTM ──────────────────────────────────────────────────────────────
     "utm_source",

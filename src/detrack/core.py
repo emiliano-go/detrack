@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from urllib.parse import SplitResult, parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -32,6 +32,21 @@ class DetrackResult:
     @property
     def has_tracking(self) -> bool:
         return bool(self.removed_params)
+
+    def __str__(self) -> str:
+        return self.url
+
+    def __repr__(self) -> str:
+        return (
+            f"DetrackResult(url={self.url!r}, "
+            f"cleaned_params={self.cleaned_params!r}, "
+            f"removed_params={self.removed_params!r})"
+        )
+
+    def __iter__(self) -> Iterator[str | dict[str, str]]:
+        yield self.url
+        yield self.cleaned_params
+        yield self.removed_params
 
 
 def _filter_pairs(
@@ -229,3 +244,33 @@ def clean_batch(
         ['https://example.com?a=1', 'https://example.com?b=2']
     """
     return [clean(url, patterns, settings) for url in urls]
+
+
+def clean_url(
+    url: str,
+    patterns: Iterable[str] | None = None,
+    settings: Settings | None = None,
+) -> str:
+    """Strip tracking parameters from a URL, returning just the cleaned string.
+
+    This is a convenience wrapper around :func:`clean` for the common case
+    where you only need the cleaned URL string.
+
+    Args:
+        url: A complete URL string.
+        patterns: Parameter names to remove. Defaults to :data:`DEFAULT_PATTERNS`.
+        settings: Runtime settings. Uses :data:`DEFAULT_SETTINGS` when ``None``.
+
+    Returns:
+        The cleaned URL string.
+
+    Examples::
+
+        >>> from detrack import clean_url
+        >>> clean_url("https://example.com?utm_source=twitter&q=python")
+        'https://example.com?q=python'
+
+        >>> clean_url("https://example.com?page=1")
+        'https://example.com?page=1'
+    """
+    return clean(url, patterns, settings).url
