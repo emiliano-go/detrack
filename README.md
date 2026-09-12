@@ -5,10 +5,18 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/detrack/"><img src="https://img.shields.io/pypi/v/detrack?style=flat-square&color=blue" alt="PyPI"></a>
-  <img src="https://img.shields.io/pypi/pyversions/detrack?style=flat-square" alt="Python">
-  <img src="https://img.shields.io/pypi/l/detrack?style=flat-square&color=green" alt="License">
-  <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=flat-square" alt="no dependencies">
+  <a href="https://pypi.org/project/detrack/">
+    <img src="https://img.shields.io/pypi/v/detrack?logo=pypi&logoColor=white&style=for-the-badge" alt="PyPI">
+  </a>
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/pypi/pyversions/detrack?logo=python&logoColor=white&style=for-the-badge" alt="Python">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/pypi/l/detrack?logo=opensourceinitiative&logoColor=white&style=for-the-badge" alt="License">
+  </a>
+  <a href="https://github.com/emiliano-go/detrack">
+    <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=for-the-badge" alt="no dependencies">
+  </a>
 </p>
 
 ## Install
