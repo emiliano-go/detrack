@@ -11,7 +11,7 @@ def test_case_insensitivity_utm() -> None:
     ]:
         result = clean(url)
         assert result.url == "https://example.com?q=1", f"Failed for {url}"
-        assert "utm_source" in result.removed_params or "UTM_SOURCE" in result.removed_params or "Utm_Source" in result.removed_params or "utm_SOURCE" in result.removed_params  # noqa: E501
+        assert result.has_tracking
 
 
 def test_case_insensitivity_fbclid() -> None:

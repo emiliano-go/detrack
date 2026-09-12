@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Any
 
 
@@ -80,9 +80,16 @@ def configure(**kwargs: Any) -> None:
 
         >>> configure(max_query_length=8192, use_prefixes=True)  # reset
     """
-    for key, value in kwargs.items():
+    for key in kwargs:
         if not hasattr(DEFAULT_SETTINGS, key):
             raise TypeError(
                 f"configure() got an unexpected keyword argument '{key}'"
             )
-        setattr(DEFAULT_SETTINGS, key, value)
+    merged = {
+        f.name: getattr(DEFAULT_SETTINGS, f.name)
+        for f in fields(DEFAULT_SETTINGS)
+    }
+    merged.update(kwargs)
+    new = Settings(**merged)
+    for f in fields(new):
+        object.__setattr__(DEFAULT_SETTINGS, f.name, getattr(new, f.name))

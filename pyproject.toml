@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["seo", "tracking", "privacy", "utm", "url-cleaner", "url", "clean", "analytics"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -40,7 +40,6 @@ dev = ["pytest", "ruff", "mypy"]
 Homepage = "https://github.com/emiliano-go/detrack"
 Source = "https://github.com/emiliano-go/detrack"
 Issues = "https://github.com/emiliano-go/detrack/issues"
-Changelog = "https://github.com/emiliano-go/detrack/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
