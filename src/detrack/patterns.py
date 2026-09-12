@@ -26,7 +26,38 @@ _PREFIXES: tuple[str, ...] = (
 )
 
 PREFIXES: tuple[str, ...] = _PREFIXES
+"""Tuple of 19 known tracking prefixes (``utm_*``, ``mtm_*``, ``hsa_*``, etc.).
 
+Used for automatic param matching when ``Settings.use_prefixes=True``.
+
+Examples::
+
+    >>> from detrack import PREFIXES
+    >>> "utm_" in PREFIXES
+    True
+
+    >>> len(PREFIXES)
+    19
+"""
+
+"""Frozenset of 330+ common tracking parameter names.
+
+Covers 20+ platforms: UTM, Google, Facebook, TikTok, LinkedIn,
+Spotify, HubSpot, Matomo, Adjust, AppsFlyer, Branch, Yandex,
+Microsoft, Pinterest, Snapchat, and more.
+
+Examples::
+
+    >>> from detrack import DEFAULT_PATTERNS
+    >>> "utm_source" in DEFAULT_PATTERNS
+    True
+
+    >>> "fbclid" in DEFAULT_PATTERNS
+    True
+
+    >>> len(DEFAULT_PATTERNS) > 300
+    True
+"""
 DEFAULT_PATTERNS: frozenset[str] = frozenset({
     # ── UTM ──────────────────────────────────────────────────────────────
     "utm_source",

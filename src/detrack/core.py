@@ -22,6 +22,20 @@ class DetrackResult:
         parsed_url: The parsed components of the original URL.
         cleaned_params: Query parameters that were kept (not tracking).
         removed_params: Query parameters that were stripped (tracking).
+
+    Examples::
+
+        >>> result = clean("https://example.com?utm_source=x&q=1")
+        >>> result.url
+        'https://example.com?q=1'
+
+        >>> result.has_tracking
+        True
+
+        >>> str(result)  # __str__ returns cleaned URL
+        'https://example.com?q=1'
+
+        >>> url, cleaned, removed = result  # tuple unpacking
     """
 
     url: str
@@ -31,12 +45,41 @@ class DetrackResult:
 
     @property
     def has_tracking(self) -> bool:
+        """True if any tracking parameters were removed.
+
+        Examples::
+
+            >>> clean("https://example.com?utm_source=x").has_tracking
+            True
+
+            >>> clean("https://example.com?q=1").has_tracking
+            False
+        """
         return bool(self.removed_params)
 
     def __str__(self) -> str:
+        """Return the cleaned URL as a string.
+
+        Examples::
+
+            >>> result = clean("https://example.com?utm_source=x&q=1")
+            >>> str(result)
+            'https://example.com?q=1'
+
+            >>> f"{result}"
+            'https://example.com?q=1'
+        """
         return self.url
 
     def __repr__(self) -> str:
+        """Compact representation without SplitResult internals.
+
+        Examples::
+
+            >>> result = clean("https://example.com?utm_source=x&q=1")
+            >>> repr(result)  # doctest: +SKIP
+            DetrackResult(url='...', cleaned_params=..., removed_params=...)
+        """
         return (
             f"DetrackResult(url={self.url!r}, "
             f"cleaned_params={self.cleaned_params!r}, "
@@ -44,6 +87,15 @@ class DetrackResult:
         )
 
     def __iter__(self) -> Iterator[str | dict[str, str]]:
+        """Yield (url, cleaned_params, removed_params) for tuple unpacking.
+
+        Examples::
+
+            >>> result = clean("https://example.com?utm_source=x&q=1")
+            >>> url, cleaned, removed = result
+            >>> url
+            'https://example.com?q=1'
+        """
         yield self.url
         yield self.cleaned_params
         yield self.removed_params
