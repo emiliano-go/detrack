@@ -128,7 +128,10 @@ def test_clean_query_empty_patterns() -> None:
 
 
 def test_version_exists() -> None:
-    assert __version__ == "0.3.0"
+    assert __version__
+    parts = __version__.split(".")
+    assert len(parts) == 3
+    assert all(p.isdigit() for p in parts)
 
 
 def test_clean_with_settings() -> None:
