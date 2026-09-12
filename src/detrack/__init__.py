@@ -1,4 +1,16 @@
 from detrack.core import clean, clean_query, DetrackResult
 from detrack.patterns import DEFAULT_PATTERNS
+from detrack.settings import DEFAULT_SETTINGS, Settings, configure
 
-__all__ = ["clean", "clean_query", "DEFAULT_PATTERNS", "DetrackResult"]
+__version__ = "0.3.0"
+
+__all__ = [
+    "clean",
+    "clean_query",
+    "DEFAULT_PATTERNS",
+    "DetrackResult",
+    "Settings",
+    "DEFAULT_SETTINGS",
+    "configure",
+    "__version__",
+]
