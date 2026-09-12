@@ -5,10 +5,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT">
-  <img src="https://img.shields.io/badge/dependencies-none-brightgreen.svg" alt="no dependencies">
-  <a href="https://pypi.org/project/detrack/"><img src="https://img.shields.io/badge/pypi-detrack-blue.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/detrack/"><img src="https://img.shields.io/pypi/v/detrack?style=flat-square&color=blue" alt="PyPI"></a>
+  <img src="https://img.shields.io/pypi/pyversions/detrack?style=flat-square" alt="Python">
+  <img src="https://img.shields.io/pypi/l/detrack?style=flat-square&color=green" alt="License">
+  <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=flat-square" alt="no dependencies">
 </p>
 
 ## Install
@@ -37,13 +37,49 @@ print(result.cleaned_params)
 
 ## Why detrack?
 
-Other URL cleaners do too much (host remapping, site-specific rules, semantic rewriting), while `detrack` does one thing and does it well: remove tracking parameters. 
+Other URL cleaners do too much (host remapping, site-specific rules, semantic rewriting), while `detrack` does one thing and does it well: remove tracking parameters.
 
 This makes `detrack` predictable, testable, and trivial to integrate.
 
 ## Ecosystem
 
 `detrack` is the shared cleaning layer for the [seoslug](https://github.com/emiliano-gandini-outeda/seoslug) (SEO metadata) and [tagurl](https://github.com/emiliano-gandini-outeda/tagurl) (semantic tagging) libraries.
+
+## Configuration
+
+`detrack` ships with sensible defaults. Override them globally with `configure()`, or per-call with a `Settings` object.
+
+### Global configuration
+
+```python
+from detrack import configure
+
+# Raise the query length limit to 16KB
+configure(max_query_length=16384)
+```
+
+### Per-call override
+
+```python
+from detrack import Settings, clean_query
+
+# This call uses a 2KB limit, ignoring the global setting
+clean_query(query, settings=Settings(max_query_length=2048))
+```
+
+### `Settings`
+
+```python
+@dataclass
+class Settings:
+    max_query_length: int = 8192  # queries longer than this are returned unchanged
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_query_length` | `int` | `8192` | Maximum query string length (in characters). Longer queries are returned unchanged to prevent abuse. |
+
+---
 
 ## Examples
 
@@ -94,32 +130,48 @@ DetrackResult(url="https://example.com?page=1",
 
 ## API
 
-### `detrack.clean(url, patterns=None)`
+### `detrack.clean(url, patterns=None, settings=None)`
 
 Strip tracking parameters from a full URL.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `url` | `str` | Any URL string |
-| `patterns` | `list[str] \| None` | Optional param names to strip (defaults to `DEFAULT_PATTERNS`) |
+| `patterns` | `Iterable[str] \| None` | Optional param names to strip (defaults to `DEFAULT_PATTERNS`) |
+| `settings` | `Settings \| None` | Optional per-call settings override (defaults to `DEFAULT_SETTINGS`) |
 
 **Returns:** [`DetrackResult`](#detrackresult) -> dataclass with cleaned URL and metadata.
 
 **Raises:** Nothing -> pure function, no exceptions.
-Malformed URLs pass through unchanged. Invalid patterns are ignored.
+Malformed URLs pass through unchanged. Queries exceeding `max_query_length` are returned unchanged.
 
 ---
 
-### `detrack.clean_query(query, patterns=None)`
+### `detrack.clean_query(query, patterns=None, settings=None)`
 
 Strip tracking parameters from a query string only.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `query` | `str` | URL query string, e.g. `"a=1&utm_source=x&b=2"` |
-| `patterns` | `list[str] \| None` | Optional param names to strip |
+| `patterns` | `Iterable[str] \| None` | Optional param names to strip |
+| `settings` | `Settings \| None` | Optional per-call settings override (defaults to `DEFAULT_SETTINGS`) |
 
-**Returns:** `str` -> cleaned query string (empty string if all params stripped).
+**Returns:** `str` -> cleaned query string. Returns the input unchanged if it's malformed or exceeds `max_query_length`.
+
+---
+
+### `detrack.configure(**kwargs)`
+
+Update global settings. Only specified fields are changed.
+
+```python
+from detrack import configure
+
+configure(max_query_length=16384)
+```
+
+**Raises:** `TypeError` for unknown keyword arguments.
 
 ---
 
@@ -158,6 +210,7 @@ for analytics, debugging, or compliance.
 - **Deterministic**: same input always yields the same output, across all systems
 - **Pure functions**: no state, no I/O, no random numbers, no exceptions
 - **Metadata returned**: `removed_params` tells you exactly what was stripped and its original value
+- **Configurable length guard**: protects against oversized queries (8KB default, adjustable)
 
 ---
 
