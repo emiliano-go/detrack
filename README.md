@@ -267,6 +267,26 @@ The prefixes used for automatic param matching when `use_prefixes=True`. Useful 
 
 ---
 
+### `detrack.DEFAULT_SETTINGS`
+
+```python
+Settings(max_query_length=8192, use_prefixes=True)
+```
+
+Global default settings instance. Modify with :func:`configure`.
+
+---
+
+### `detrack.__version__`
+
+```python
+"0.3.0"
+```
+
+Current library version string.
+
+---
+
 ### `DetrackResult`
 
 ```python
