@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from urllib.parse import SplitResult, parse_qsl, urlencode, urlsplit, urlunsplit
@@ -11,6 +12,9 @@ _DEFAULT_PATTERNS_LOWER: frozenset[str] = frozenset(
     p.lower() for p in DEFAULT_PATTERNS
 )
 _PREFIXES_LOWER: tuple[str, ...] = tuple(p.lower() for p in _PREFIXES)
+_PREFIX_RE: re.Pattern[str] = re.compile(
+    r"^(?:" + "|".join(re.escape(p) for p in _PREFIXES_LOWER) + r")"
+)
 
 
 @dataclass
@@ -117,8 +121,7 @@ def _filter_pairs(
     for key, val in pairs:
         key_lower = key.lower()
         if key_lower in patterns_set or (
-            use_prefixes
-            and any(key_lower.startswith(p) for p in _PREFIXES_LOWER)
+            use_prefixes and _PREFIX_RE.match(key_lower)
         ):
             removed[key] = val
         else:
