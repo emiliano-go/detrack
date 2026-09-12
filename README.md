@@ -41,6 +41,11 @@ print(result.removed_params)
 
 print(result.cleaned_params)
 # {"q": "python"}
+
+# Quick check if tracking was found
+if result.has_tracking:
+    print(f"Stripped: {list(result.removed_params.keys())}")
+    # Stripped: ['utm_source', 'fbclid']
 ```
 
 ## Why detrack?
@@ -171,6 +176,33 @@ Strip tracking parameters from a query string only.
 
 ---
 
+### `detrack.clean_batch(urls, patterns=None, settings=None)`
+
+Strip tracking parameters from multiple URLs at once.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `urls` | `Iterable[str]` | URLs to clean |
+| `patterns` | `Iterable[str] \| None` | Optional param names to strip |
+| `settings` | `Settings \| None` | Optional per-call settings override |
+
+**Returns:** `list[DetrackResult]` -> one result per input URL.
+
+```python
+>>> from detrack import clean_batch
+>>> urls = [
+...     "https://example.com?a=1&utm_source=x",
+...     "https://example.com?fbclid=y&b=2",
+... ]
+>>> results = clean_batch(urls)
+>>> [r.url for r in results]
+['https://example.com?a=1', 'https://example.com?b=2']
+>>> [r.has_tracking for r in results]
+[True, True]
+```
+
+---
+
 ### `detrack.configure(**kwargs)`
 
 Update global settings. Only specified fields are changed.
@@ -214,6 +246,7 @@ class DetrackResult:
     parsed_url: SplitResult        # urllib.parse result (for further processing)
     cleaned_params: dict[str, str] # Parameters that remain
     removed_params: dict[str, str] # Stripped parameters + their original values
+    has_tracking: bool             # True if any tracking params were removed
 ```
 
 `removed_params` preserves the original values so you can log what was stripped
@@ -228,6 +261,8 @@ for analytics, debugging, or compliance.
 - **Deterministic**: same input always yields the same output, across all systems
 - **Pure functions**: no state, no I/O, no random numbers, no exceptions
 - **Metadata returned**: `removed_params` tells you exactly what was stripped and its original value
+- **`has_tracking`**: quick boolean check on the result — `if clean(url).has_tracking`
+- **Batch cleaning**: process multiple URLs at once with `clean_batch(urls)`
 - **Configurable**: query length guard, prefix matching, and pattern lists are all adjustable
 
 ---

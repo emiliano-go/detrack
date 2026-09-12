@@ -29,6 +29,10 @@ class DetrackResult:
     cleaned_params: dict[str, str]
     removed_params: dict[str, str]
 
+    @property
+    def has_tracking(self) -> bool:
+        return bool(self.removed_params)
+
 
 def _filter_pairs(
     query: str,
@@ -196,3 +200,32 @@ def clean(
             cleaned_params={},
             removed_params={},
         )
+
+
+def clean_batch(
+    urls: Iterable[str],
+    patterns: Iterable[str] | None = None,
+    settings: Settings | None = None,
+) -> list[DetrackResult]:
+    """Strip tracking parameters from multiple URLs.
+
+    Args:
+        urls: URLs to clean.
+        patterns: Parameter names to remove. Defaults to :data:`DEFAULT_PATTERNS`.
+        settings: Runtime settings. Uses :data:`DEFAULT_SETTINGS` when ``None``.
+
+    Returns:
+        A list of :class:`DetrackResult`, one per input URL.
+
+    Examples::
+
+        >>> from detrack import clean_batch
+        >>> urls = [
+        ...     "https://example.com?a=1&utm_source=x",
+        ...     "https://example.com?fbclid=y&b=2",
+        ... ]
+        >>> results = clean_batch(urls)
+        >>> [r.url for r in results]
+        ['https://example.com?a=1', 'https://example.com?b=2']
+    """
+    return [clean(url, patterns, settings) for url in urls]

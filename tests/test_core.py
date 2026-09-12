@@ -1,4 +1,11 @@
-from detrack import DetrackResult, Settings, __version__, clean, clean_query
+from detrack import (
+    DetrackResult,
+    Settings,
+    __version__,
+    clean,
+    clean_batch,
+    clean_query,
+)
 
 
 def test_clean_basic() -> None:
@@ -212,3 +219,64 @@ def test_clean_linkedin_url() -> None:
     url = "https://example.com?li_fat_id=abc123&q=1"
     result = clean(url)
     assert result.url == "https://example.com?q=1"
+
+
+def test_has_tracking_true() -> None:
+    result = clean("https://example.com?utm_source=x&q=1")
+    assert result.has_tracking is True
+
+
+def test_has_tracking_false() -> None:
+    result = clean("https://example.com?q=1&page=2")
+    assert result.has_tracking is False
+
+
+def test_has_tracking_empty_url() -> None:
+    result = clean("https://example.com")
+    assert result.has_tracking is False
+
+
+def test_has_tracking_all_removed() -> None:
+    result = clean("https://example.com?utm_source=x&fbclid=y")
+    assert result.has_tracking is True
+
+
+def test_clean_batch_multiple() -> None:
+    urls = [
+        "https://example.com?a=1&utm_source=x",
+        "https://example.com?fbclid=y&b=2",
+        "https://example.com?c=3",
+    ]
+    results = clean_batch(urls)
+    assert len(results) == 3
+    assert results[0].url == "https://example.com?a=1"
+    assert results[1].url == "https://example.com?b=2"
+    assert results[2].url == "https://example.com?c=3"
+    assert results[0].has_tracking is True
+    assert results[1].has_tracking is True
+    assert results[2].has_tracking is False
+
+
+def test_clean_batch_empty() -> None:
+    assert clean_batch([]) == []
+
+
+def test_clean_batch_with_patterns() -> None:
+    urls = [
+        "https://example.com?utm_source=x&q=1",
+        "https://example.com?session=abc&q=2",
+    ]
+    results = clean_batch(urls, patterns=["utm_source", "session"])
+    assert results[0].url == "https://example.com?q=1"
+    assert results[1].url == "https://example.com?q=2"
+
+
+def test_clean_batch_with_settings() -> None:
+    urls = [
+        "https://example.com?utm_source=x&q=1",
+        "https://example.com?hsa_custom=y&b=2",
+    ]
+    settings = Settings(use_prefixes=False)
+    results = clean_batch(urls, settings=settings)
+    assert results[0].url == "https://example.com?q=1"
+    assert results[1].url == "https://example.com?hsa_custom=y&b=2"
