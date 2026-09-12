@@ -1,9 +1,10 @@
 from detrack import DEFAULT_PATTERNS
+from detrack.patterns import _PREFIXES
 
 
 def test_default_patterns_count() -> None:
-    assert len(DEFAULT_PATTERNS) >= 60, (
-        f"DEFAULT_PATTERNS has {len(DEFAULT_PATTERNS)} items, expected >= 60"
+    assert len(DEFAULT_PATTERNS) >= 200, (
+        f"DEFAULT_PATTERNS has {len(DEFAULT_PATTERNS)} items, expected >= 200"
     )
 
 
@@ -59,3 +60,59 @@ def test_redirect_params_present() -> None:
     assert redirect.issubset(DEFAULT_PATTERNS), (
         f"Missing redirect params: {redirect - DEFAULT_PATTERNS}"
     )
+
+
+def test_hubspot_params_present() -> None:
+    hubspot = {"_hsenc", "_hsmi", "__hsfp", "__hssc", "__hstc",
+               "hsa_acc", "hsa_ad", "hsa_cam", "hsa_kw", "hsCtaTracking"}
+    assert hubspot.issubset(DEFAULT_PATTERNS), (
+        f"Missing HubSpot params: {hubspot - DEFAULT_PATTERNS}"
+    )
+
+
+def test_matomo_params_present() -> None:
+    matomo = {"mtm_campaign", "mtm_medium", "mtm_source", "pk_campaign",
+              "pk_medium", "pk_source"}
+    assert matomo.issubset(DEFAULT_PATTERNS), (
+        f"Missing Matomo params: {matomo - DEFAULT_PATTERNS}"
+    )
+
+
+def test_click_ids_present() -> None:
+    ids = {"fbclid", "gclid", "msclkid", "ttclid", "twclid", "li_fat_id",
+           "sccid", "qclid", "epik"}
+    assert ids.issubset(DEFAULT_PATTERNS), (
+        f"Missing click IDs: {ids - DEFAULT_PATTERNS}"
+    )
+
+
+def test_spotify_params_present() -> None:
+    spotify = {"si", "nd", "dl_branch", "context"}
+    assert spotify.issubset(DEFAULT_PATTERNS), (
+        f"Missing Spotify params: {spotify - DEFAULT_PATTERNS}"
+    )
+
+
+def test_adjust_params_present() -> None:
+    adjust = {"adj_t", "adj_campaign", "gps_adid", "adjust_campaign"}
+    assert adjust.issubset(DEFAULT_PATTERNS), (
+        f"Missing Adjust params: {adjust - DEFAULT_PATTERNS}"
+    )
+
+
+def test_appsflyer_params_present() -> None:
+    af = {"af_xp", "af_ad", "af_adset", "pid"}
+    assert af.issubset(DEFAULT_PATTERNS), (
+        f"Missing AppsFlyer params: {af - DEFAULT_PATTERNS}"
+    )
+
+
+def test_prefixes_exist() -> None:
+    assert len(_PREFIXES) > 0
+    assert "utm_" in _PREFIXES
+    assert "mtm_" in _PREFIXES
+
+
+def test_no_duplicates() -> None:
+    lower = [p.lower() for p in DEFAULT_PATTERNS]
+    assert len(lower) == len(set(lower)), "DEFAULT_PATTERNS contains duplicates"

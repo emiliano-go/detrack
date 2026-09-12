@@ -81,11 +81,13 @@ clean_query(query, settings=Settings(max_query_length=2048))
 @dataclass
 class Settings:
     max_query_length: int = 8192  # queries longer than this are returned unchanged
+    use_prefixes: bool = True     # strip params matching known prefixes (utm_*, mtm_*, etc.)
 ```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `max_query_length` | `int` | `8192` | Maximum query string length (in characters). Longer queries are returned unchanged to prevent abuse. |
+| `use_prefixes` | `bool` | `True` | When `True`, any param starting with a known prefix (`utm_`, `mtm_`, `hsa_`, `pk_`, etc.) is stripped even if not listed explicitly. |
 
 ---
 
@@ -186,13 +188,20 @@ configure(max_query_length=16384)
 ### `detrack.DEFAULT_PATTERNS`
 
 ```python
-frozenset[str]  # 60+ common tracking parameters
+frozenset[str]  # 330+ common tracking parameters
 ```
 
-Covers UTM parameters, social tracking (`fbclid`, `ref`, `si`), marketing IDs
-(`gclid`, `msclkid`, `wbraid`), analytics (`_ga`, `_gl`), cache busters
-(`cb`, `rand`, `timestamp`), session IDs (`sid`, `phpsessid`), and redirect
-params. Pass a custom `patterns` list to `clean()` to override.
+Covers 20+ platforms: UTM (50+ variants), Google Ads/Analytics, Facebook/Meta,
+TikTok, LinkedIn, Spotify, HubSpot (18 params), Matomo/Piwik, Adjust, AppsFlyer,
+Branch.io, Yandex, Microsoft/Bing, Pinterest, Snapchat, Quora, AT Internet,
+Adobe/Marketo, Coremetrics, MyTracker, email marketing (Mailchimp, Klaviyo, etc.),
+affiliate networks (CJ, Awin, etc.), cache busters, session IDs, and redirect params.
+
+Prefix matching is enabled by default: any param starting with `utm_`, `mtm_`,
+`hsa_`, `pk_`, `af_`, `adj_`, `at_`, `cm_`, `bsft_`, `mc_`, `ir_`, `fb_`,
+`hs_`, `piwik_`, `mt_`, `vgo_`, `sms_`, `eml_`, or `nb_` is also stripped.
+
+Pass a custom `patterns` list to `clean()` to override entirely.
 
 ---
 
@@ -212,13 +221,14 @@ for analytics, debugging, or compliance.
 
 ## Features
 
-- **60+ default patterns**: UTM, social, marketing, analytics, cache busters, session, redirect
+- **330+ default patterns**: covers 20+ platforms — UTM, Google, Facebook, TikTok, LinkedIn, Spotify, HubSpot, Matomo, Adjust, AppsFlyer, and more
+- **Prefix matching**: automatically strips params starting with `utm_`, `mtm_`, `hsa_`, `pk_`, etc. even if not listed explicitly
 - **Case-insensitive matching**: `UTM_SOURCE`, `Utm_Source`, and `utm_source` are all stripped
 - **Zero dependencies**: uses only `urllib.parse` from the Python standard library
 - **Deterministic**: same input always yields the same output, across all systems
 - **Pure functions**: no state, no I/O, no random numbers, no exceptions
 - **Metadata returned**: `removed_params` tells you exactly what was stripped and its original value
-- **Configurable length guard**: protects against oversized queries (8KB default, adjustable)
+- **Configurable**: query length guard, prefix matching, and pattern lists are all adjustable
 
 ---
 

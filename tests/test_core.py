@@ -1,4 +1,4 @@
-from detrack import DetrackResult, Settings, clean, clean_query, __version__
+from detrack import DetrackResult, Settings, __version__, clean, clean_query
 
 
 def test_clean_basic() -> None:
@@ -142,3 +142,73 @@ def test_clean_question_mark_no_query() -> None:
     assert result.url == "https://example.com?"
     assert result.cleaned_params == {}
     assert result.removed_params == {}
+
+
+def test_prefix_matching_utm() -> None:
+    result = clean_query("utm_custom=x&q=1")
+    assert result == "q=1"
+
+
+def test_prefix_matching_mtm() -> None:
+    result = clean_query("mtm_custom=x&q=1")
+    assert result == "q=1"
+
+
+def test_prefix_matching_hsa() -> None:
+    result = clean_query("hsa_custom=x&q=1")
+    assert result == "q=1"
+
+
+def test_prefix_disabled() -> None:
+    settings = Settings(use_prefixes=False)
+    result = clean_query("utm_custom=x&q=1", settings=settings)
+    assert result == "utm_custom=x&q=1"
+
+
+def test_prefix_disabled_preserves_explicit_match() -> None:
+    settings = Settings(use_prefixes=False)
+    result = clean_query("utm_source=x&q=1", settings=settings)
+    assert result == "q=1"
+
+
+def test_custom_patterns_ignore_prefixes() -> None:
+    result = clean_query("utm_source=x&q=1", patterns=["utm_source"])
+    assert result == "q=1"
+    result2 = clean_query("utm_custom=x&q=1", patterns=["utm_source"])
+    assert result2 == "utm_custom=x&q=1"
+
+
+def test_clean_spotify_url() -> None:
+    url = "https://open.spotify.com/track/abc?si=xyz&utm_source=copy-link"
+    result = clean(url)
+    assert "si=" not in result.url
+    assert "utm_source" not in result.url
+    assert result.removed_params.get("si") == "xyz"
+    assert result.removed_params.get("utm_source") == "copy-link"
+
+
+def test_clean_hubspot_url() -> None:
+    url = "https://example.com?hsa_acc=123&hsa_cam=456&q=python"
+    result = clean(url)
+    assert result.url == "https://example.com?q=python"
+    assert "hsa_acc" in result.removed_params
+    assert "hsa_cam" in result.removed_params
+
+
+def test_clean_matomo_url() -> None:
+    url = "https://example.com?mtm_campaign=spring&mtm_medium=email&q=1"
+    result = clean(url)
+    assert result.url == "https://example.com?q=1"
+
+
+def test_clean_tiktok_url() -> None:
+    url = "https://example.com?ttclid=abc123&q=1"
+    result = clean(url)
+    assert result.url == "https://example.com?q=1"
+    assert result.removed_params.get("ttclid") == "abc123"
+
+
+def test_clean_linkedin_url() -> None:
+    url = "https://example.com?li_fat_id=abc123&q=1"
+    result = clean(url)
+    assert result.url == "https://example.com?q=1"

@@ -1,4 +1,4 @@
-from detrack.core import clean, clean_query, DetrackResult
+from detrack.core import DetrackResult, clean, clean_query
 from detrack.patterns import DEFAULT_PATTERNS
 from detrack.settings import DEFAULT_SETTINGS, Settings, configure
 

@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 from urllib.parse import SplitResult, parse_qsl, urlencode, urlsplit, urlunsplit
 
-from detrack.patterns import DEFAULT_PATTERNS
+from detrack.patterns import _PREFIXES, DEFAULT_PATTERNS
 from detrack.settings import DEFAULT_SETTINGS, Settings
 
 _DEFAULT_PATTERNS_LOWER: frozenset[str] = frozenset(
     p.lower() for p in DEFAULT_PATTERNS
 )
+_PREFIXES_LOWER: tuple[str, ...] = tuple(p.lower() for p in _PREFIXES)
 
 
 @dataclass
@@ -32,20 +33,34 @@ class DetrackResult:
 def _filter_pairs(
     query: str,
     patterns: Iterable[str] | None = None,
+    use_prefixes: bool = True,
 ) -> tuple[list[tuple[str, str]], dict[str, str]]:
     if patterns is not None:
         patterns_set = frozenset(p.lower() for p in patterns)
+        use_prefixes = False
     else:
         patterns_set = _DEFAULT_PATTERNS_LOWER
     pairs = parse_qsl(query, keep_blank_values=True)
     cleaned: list[tuple[str, str]] = []
     removed: dict[str, str] = {}
     for key, val in pairs:
-        if key.lower() in patterns_set:
+        key_lower = key.lower()
+        if key_lower in patterns_set or (
+            use_prefixes
+            and any(key_lower.startswith(p) for p in _PREFIXES_LOWER)
+        ):
             removed[key] = val
         else:
             cleaned.append((key, val))
     return cleaned, removed
+
+
+_EMPTY_RESULT = DetrackResult(
+    url="",
+    parsed_url=urlsplit(""),
+    cleaned_params={},
+    removed_params={},
+)
 
 
 def clean_query(
@@ -80,11 +95,13 @@ def clean_query(
         >>> clean_query("q=1", patterns=["q"])  # custom patterns
         ''
     """
+    if not isinstance(query, str):
+        return ""
     settings = settings or DEFAULT_SETTINGS
     try:
         if len(query) > settings.max_query_length:
             return query
-        cleaned, _ = _filter_pairs(query, patterns)
+        cleaned, _ = _filter_pairs(query, patterns, settings.use_prefixes)
         return urlencode(cleaned, doseq=True)
     except Exception:
         return query
@@ -124,8 +141,10 @@ def clean(
         >>> clean("https://example.com/page").url  # no tracking
         'https://example.com/page'
     """
+    if not isinstance(url, str):
+        return _EMPTY_RESULT
     settings = settings or DEFAULT_SETTINGS
-    if not url or "?" not in url:
+    if "?" not in url:
         try:
             parsed = urlsplit(url)
         except Exception:
@@ -152,7 +171,9 @@ def clean(
                 cleaned_params={},
                 removed_params={},
             )
-        cleaned_pairs, removed = _filter_pairs(parsed.query, patterns)
+        cleaned_pairs, removed = _filter_pairs(
+            parsed.query, patterns, settings.use_prefixes
+        )
         cleaned_qs = urlencode(cleaned_pairs, doseq=True)
         cleaned_dict = dict(cleaned_pairs)
         new_url = urlunsplit((
@@ -171,7 +192,7 @@ def clean(
     except Exception:
         return DetrackResult(
             url=url,
-            parsed_url=urlsplit(url),
+            parsed_url=urlsplit(""),
             cleaned_params={},
             removed_params={},
         )
