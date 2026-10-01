@@ -17,6 +17,9 @@
   <a href="https://github.com/emiliano-go/detrack">
     <img src="https://img.shields.io/badge/dependencies-none-brightgreen?style=for-the-badge" alt="no dependencies">
   </a>
+  <a href="https://github.com/emiliano-go/detrack/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/emiliano-go/detrack/ci.yml?branch=master&style=for-the-badge&logo=github&label=Tests" alt="Tests">
+  </a>
 </p>
 
 ## Install
